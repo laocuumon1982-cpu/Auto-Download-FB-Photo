@@ -31,8 +31,9 @@ Tool chỉ tải được ảnh mà tài khoản của bạn xem được.
 - Windows: `run_windows.bat` · macOS: `bash run_mac.command` (cần Python 3.9+)
 - Tự build exe: `build_portable_windows.bat`. Bản macOS `.app`: `build_app_mac.command`
 
-## Phát hành bản mới (dành cho người phát triển)
+## Phát hành bản mới
 
-1. Sửa `APP_VERSION` trong `auto_download_fb_photo.py`, ví dụ `"3.2"`.
-2. Commit và push, rồi tạo tag: `git tag v3.2 && git push origin v3.2`.
-3. GitHub Actions sẽ tự build `Auto-Download-FB-Photo.exe` và tạo Release. Tool của người dùng sẽ thấy bản mới khi mở lên.
+1. Sửa `APP_VERSION` trong `auto_download_fb_photo.py`, ví dụ `"3.2"`, rồi commit và push.
+2. Trên GitHub, vào **Actions → Build portable → Run workflow**, để tick *Phát hành Release mới*, rồi bấm **Run**.
+   Có thể thay bước này bằng tạo tag: `git tag v3.2 && git push origin v3.2`.
+3. Khoảng 5 phút sau, Release `v3.2` sẽ có file `Auto-Download-FB-Photo.exe`. Tool của người dùng sẽ báo có bản mới.
