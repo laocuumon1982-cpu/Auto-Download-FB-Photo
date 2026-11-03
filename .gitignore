@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+build/
+dist/
+Portable/
+fb_profile/
+browsers/
+*.spec
+*.part
+*.new

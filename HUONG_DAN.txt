@@ -1,0 +1,40 @@
+AUTO DOWNLOAD - FB PHOTO v3.1 - HƯỚNG DẪN
+
+=== BẢN PORTABLE (.exe) ===
+Tải Auto-Download-FB-Photo.exe tại:
+  https://github.com/laocuumon1982-cpu/Auto-Download-FB-Photo/releases/latest
+-> Chạy luôn, không cần cài Python. Copy đi đâu cũng được.
+-> Phiên đăng nhập (fb_profile) lưu ngay cạnh file exe.
+(Tự build: nhấp đúp build_portable_windows.bat -> Portable\Auto-Download-FB-Photo.exe)
+
+=== CẬP NHẬT ===
+Mỗi lần mở, tool tự kiểm tra bản mới. Có bản mới thì nút góc trên đổi màu cam
+"⬆ Có bản vX.Y" -> bấm vào -> Yes -> tool tự tải, thay file và mở lại.
+Phiên đăng nhập và ảnh đã tải được giữ nguyên.
+
+=== CHẠY KHÔNG CẦN BUILD ===
+- Windows: nhấp đúp run_windows.bat
+- Mac:     mở Terminal, gõ  bash run_mac.command
+
+=== SỬ DỤNG ===
+1. Bấm "Đăng nhập Facebook" -> đăng nhập trong trình duyệt -> đóng trình duyệt.
+   (Chỉ bước này hiện trình duyệt. Góc trên sẽ hiện "● Đã đăng nhập".)
+2. Công tắc "Chạy ẩn" (mặc định BẬT): khi tải, tool làm mọi thứ trong nền, không mở Facebook lên.
+   Tắt công tắc nếu muốn xem tool đang làm gì.
+
+Tab "Link bài viết / album":
+   Dán link (mỗi dòng 1 link): bài viết, album (media/set/?set=a....), tab Ảnh của trang, hoặc link ảnh.
+
+Tab "Album của trang" (tải nguyên thư mục ảnh):
+   a. Dán link trang/hồ sơ, vd https://www.facebook.com/TheLuckyArtAi
+   b. Bấm "Lấy danh sách album" -> hiện danh sách album.
+   c. Tick các album muốn tải (hoặc "Chọn tất cả", hoặc "Tất cả ảnh của trang").
+   Mỗi album lưu vào 1 thư mục riêng: <Lưu vào>/<tên trang>/<tên album>/
+
+3. Bấm "▶ Bắt đầu tải". Với album, tool quét hết ảnh trước nên thanh tiến trình hiện % chính xác.
+4. "📁 Mở thư mục" mở thư mục vừa tải. Chạy lại cùng album sẽ bỏ qua ảnh đã có.
+
+MẸO
+- Album không nhận? Mở ảnh đầu tiên của album, copy link ảnh (có "set=a.") rồi dán vào.
+- Không bấm/đóng cửa sổ trình duyệt của tool khi đang chạy (nếu lỡ đóng, tool tự mở lại).
+- Chỉ tải được ảnh mà tài khoản của bạn xem được.

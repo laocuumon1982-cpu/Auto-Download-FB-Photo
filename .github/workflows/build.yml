@@ -1,0 +1,52 @@
+name: Build portable
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Build exe
+        run: >
+          pyinstaller --noconfirm --clean --onefile --windowed
+          --name "Auto-Download-FB-Photo"
+          --icon "assets/icon.ico"
+          --add-data "assets;assets"
+          --collect-data customtkinter
+          --collect-all playwright
+          auto_download_fb_photo.py
+
+      - name: Smoke test (import)
+        shell: pwsh
+        run: |
+          if (!(Test-Path "dist/Auto-Download-FB-Photo.exe")) { exit 1 }
+          (Get-Item "dist/Auto-Download-FB-Photo.exe").Length / 1MB
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Auto-Download-FB-Photo-windows
+          path: dist/Auto-Download-FB-Photo.exe
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/Auto-Download-FB-Photo.exe
+          generate_release_notes: true
