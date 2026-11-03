@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Auto Download - FB Photo v3.1
+Auto Download - FB Photo v3.2
 - Tab "Link": dán link bài viết / album / ảnh -> tải toàn bộ ảnh.
 - Tab "Album của trang": dán link trang/hồ sơ -> lấy danh sách album -> tick chọn -> tải nguyên album.
 - Chế độ chạy ẩn: khi tải không hiện cửa sổ trình duyệt (chỉ hiện khi đăng nhập).
@@ -21,7 +21,7 @@ import urllib.request
 from urllib.parse import urlparse, parse_qs
 
 APP_NAME = "Auto Download - FB Photo"
-APP_VERSION = "3.1"
+APP_VERSION = "3.2"
 GITHUB_REPO = "laocuumon1982-cpu/Auto-Download-FB-Photo"
 RELEASES_URL = f"https://github.com/{GITHUB_REPO}/releases"
 EXE_ASSET = "Auto-Download-FB-Photo.exe"
@@ -90,15 +90,17 @@ LARGEST_IMG_JS = r"""
 }
 """
 
+# Tìm link ảnh trên TOÀN trang (bài viết nhóm/trang có thể nằm trong popup bất kỳ),
+# bỏ qua bảng Thông báo và link ảnh đại diện.
 PHOTO_LINKS_JS = r"""
 () => {
-  const root = document.querySelector('[role="dialog"]')
-            || document.querySelector('[role="main"]')
-            || document;
   const out = [];
-  for (const a of root.querySelectorAll('a[href]')) {
+  for (const a of document.querySelectorAll('a[href]')) {
     const h = a.href;
-    if (/\/photo(\.php)?\/?\?/.test(h) || /\/photos\/[^?#]+\/\d+/.test(h)) out.push(h);
+    if (!(/\/photo(\.php)?\/?\?/.test(h) || /\/photos\/[^?#]+\/\d+/.test(h))) continue;
+    if (/notif_id=|notif_t=/.test(h)) continue;
+    if (a.closest('[aria-label="Thông báo"], [aria-label="Notifications"]')) continue;
+    out.push(h);
   }
   return out;
 }
@@ -222,6 +224,33 @@ def page_name(page_url):
 
 def safe_name(s):
     return re.sub(r"[^\w\-. ]+", "_", s).strip(" _.")[:80] or "fb"
+
+
+def post_id_from(url):
+    for pat in (r"/permalink/(\d+)", r"/posts/(\d+)", r"story_fbid=(\d+)", r"multi_permalinks=(\d+)"):
+        m = re.search(pat, url)
+        if m:
+            return m.group(1)
+    return None
+
+
+def rank_post_photos(links, page_url, set_id=None):
+    """Chọn ảnh đầu tiên thuộc đúng bài viết."""
+    links = [l for l in links if "set=p." not in l]  # bỏ ảnh đại diện
+    if not links:
+        return None
+    pid = post_id_from(page_url)
+    keys = []
+    if set_id:
+        keys.append(set_id)
+    if pid:
+        keys += [f"set=pcb.{pid}", f"set=gm.{pid}", f"set=g.{pid}"]
+    keys += ["set=pcb.", "set=gm.", "set=g.", "set=a."]
+    for k in keys:
+        pref = [l for l in links if k in l]
+        if pref:
+            return pref[0]
+    return links[0]
 
 
 def is_closed_error(e):
@@ -540,28 +569,38 @@ class Worker:
         if is_photo_url(url):
             return url
         page.goto(url, wait_until="domcontentloaded")
-        page.wait_for_timeout(4000)
+        page.wait_for_timeout(3000)
         if self.check_login_wall(page):
             return None
+        if page.url != url:
+            self.log(f"  -> chuyển tới: {page.url.split('?')[0]}")
         set_id = get_set(url)
-        links = []
-        for _ in range(4):
+        links, best = [], None
+        for i in range(8):  # chờ tối đa ~20s cho bài viết tải xong
             links = page.evaluate(PHOTO_LINKS_JS)
-            if links:
+            best = rank_post_photos(links, page.url, set_id)
+            pid = post_id_from(page.url)
+            if best and (not pid or pid in best or i >= 3):
                 break
-            page.mouse.wheel(0, 900)
-            page.wait_for_timeout(2000)
-        if not links:
-            return None
-        if set_id:
-            pref = [l for l in links if set_id in l]
-            if pref:
-                return pref[0]
-        for key in ("set=pcb.", "set=a.", "set=g.", "set=gm."):
-            pref = [l for l in links if key in l]
-            if pref:
-                return pref[0]
-        return links[0]
+            if i % 2:
+                page.mouse.wheel(0, 700)
+            page.wait_for_timeout(2500)
+        if not best:
+            self.save_debug(page, "khong_thay_anh")
+        return best
+
+    def save_debug(self, page, tag):
+        """Lưu ảnh chụp + HTML trang để tìm lỗi khi không thấy ảnh."""
+        try:
+            d = os.path.join(DATA_DIR, "debug")
+            os.makedirs(d, exist_ok=True)
+            base = os.path.join(d, time.strftime(f"%Y%m%d_%H%M%S_{tag}"))
+            page.screenshot(path=base + ".png", full_page=False)
+            with open(base + ".html", "w", encoding="utf-8") as f:
+                f.write(page.content())
+            self.log(f"  Đã lưu ảnh chụp trang để kiểm tra: {base}.png")
+        except Exception:
+            pass
 
     def wait_img(self, page, prev_src, timeout=10.0):
         end = time.time() + timeout
